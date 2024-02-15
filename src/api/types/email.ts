@@ -13,6 +13,7 @@ export type Email = {
     }[]
     body: {
       size: number
+      data: string
     }
     parts: {
       partId: string
