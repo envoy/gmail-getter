@@ -6,6 +6,7 @@ export type CheckInboxOptions = {
   step?: number
   all?: boolean
   query?: string
+  apiBaseUrl?: string
 }
 
 /**
@@ -34,13 +35,9 @@ export const checkInbox = async (options: CheckInboxOptions): Promise<Email | Em
   let startTime = Date.now()
 
   while (Date.now() - startTime < timeout) {
-    try {
-      messages = await fetchEmailsListByQuery(token, query)
-    } catch (error) {
-      console.log(error)
-    }
+    messages = await fetchEmailsListByQuery(token, query, options)
 
-    if (messages) break
+    if (messages?.length) break
 
     await new Promise(resolve => setTimeout(resolve, step))
   }
@@ -54,7 +51,7 @@ export const checkInbox = async (options: CheckInboxOptions): Promise<Email | Em
   }
 
   for (const message of messages) {
-    const email = await fetchEmailById(message.id, token)
+    const email = await fetchEmailById(message.id, token, options)
     emails.push(email)
 
     if (all) {

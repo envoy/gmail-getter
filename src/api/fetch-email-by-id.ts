@@ -8,20 +8,30 @@ import {Email} from './types'
  * @returns {Promise<Email>} Email contents
  * @example const email = await fetchEmailById('123456a123b1c1d1', 'ya01.a123456...')
  */
-export const fetchEmailById = async (id: string, token: string): Promise<Email> => {
+export const fetchEmailById = async (
+  id: string,
+  token: string,
+  options: {apiBaseUrl?: string} = {}
+): Promise<Email> => {
+  const base = options.apiBaseUrl ?? 'https://gmail.googleapis.com/'
   const config: AxiosRequestConfig = {
     method: 'get',
-    url: `https://gmail.googleapis.com/gmail/v1/users/me/messages/${id}?format=full`,
+    url: new URL(
+      `gmail/v1/users/me/messages/${encodeURIComponent(id)}?format=full`,
+      base.endsWith('/') ? base : base + '/'
+    ).href,
     timeout: 15000,
-    headers: {Authorization: `OAuth ${token}`},
+    headers: {Authorization: `Bearer ${token}`},
     validateStatus: () => true,
   }
 
   const response = await axios.request(config)
+  if (response.status >= 400)
+    throw new Error(`Gmail message request failed: HTTP ${response.status}`)
   const {data: body} = response
 
   if (!body) {
-    throw new Error(`Unable to parse response body. ${JSON.stringify(response)}`)
+    throw new Error('Gmail message response is missing a body')
   }
 
   return body

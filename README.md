@@ -125,3 +125,29 @@ const email = await checkInbox({
 const regexp = /(https:\/\/)(\S*)(gmail-getter)([\w\/\?\=\-]*)/im
 const link = findElementByRegexp(email, regexp)
 ```
+# Envoy fork: emulator endpoints
+
+This fork retains the `@gregjlee/gmail-getter` API and Google endpoint defaults.
+For a local Gmail-compatible emulator, supply an API origin or prefix:
+
+```ts
+const email = await checkInbox({
+  token: 'local-test-token',
+  apiBaseUrl: 'https://dashboard.envoy.dev/_hotel2/email/',
+  query: 'subject:Invitation',
+  timeout: 90000,
+  step: 1000,
+});
+```
+
+`fetchEmailsListByQuery(token, query, {apiBaseUrl})` and
+`fetchEmailById(id, token, {apiBaseUrl})` accept the same optional endpoint.
+`getAccessToken(clientId, clientSecret, refreshToken, {tokenUrl})` optionally
+overrides the OAuth token endpoint. Without these options, requests still go
+to Google. Use only local test credentials with emulator endpoints.
+
+Gmail requests use standard Bearer authentication and encode search queries.
+Polling continues while message lists are absent or empty. HTTP failures reject
+instead of being logged and swallowed; error messages omit response bodies.
+The loopback compatibility suite runs with `npm test -- --runInBand tests/emulator.test.ts`.
+The original API/helper suites require real Gmail credentials and are separate.

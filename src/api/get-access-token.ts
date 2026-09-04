@@ -11,7 +11,8 @@ import axios, {AxiosRequestConfig} from 'axios'
 export const getAccessToken = async (
   clientId: string,
   clientSecret: string,
-  refreshToken: string
+  refreshToken: string,
+  options: {tokenUrl?: string} = {}
 ): Promise<string> => {
   if (!clientId) throw new Error('Client ID is missing!')
   if (!clientSecret) throw new Error('Client Secret is missing!')
@@ -25,7 +26,7 @@ export const getAccessToken = async (
 
   const config: AxiosRequestConfig = {
     method: 'post',
-    url: 'https://accounts.google.com/o/oauth2/token',
+    url: options.tokenUrl ?? 'https://accounts.google.com/o/oauth2/token',
     timeout: 15000,
     headers: {'content-type': 'application/x-www-form-urlencoded'},
     data: params,
@@ -33,16 +34,17 @@ export const getAccessToken = async (
   }
 
   const response = await axios.request(config)
+  if (response.status >= 400) throw new Error(`Gmail token request failed: HTTP ${response.status}`)
   const {data: body} = response
 
   if (!body) {
-    throw new Error(`Unable to parse response body. ${JSON.stringify(response)}`)
+    throw new Error('Gmail token response is missing a body')
   }
 
   const {access_token: accessToken} = body
 
   if (!accessToken) {
-    throw new Error(`Unable to parse Access token from the response body. ${JSON.stringify(body)}`)
+    throw new Error('Gmail token response is missing an access token')
   }
 
   return accessToken
