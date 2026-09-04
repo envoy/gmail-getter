@@ -1,4 +1,5 @@
 import axios, {AxiosRequestConfig} from 'axios'
+import {currentGmailConfig} from '../config'
 import {EmailsList} from './types'
 import {Message} from './types/message'
 
@@ -18,7 +19,8 @@ export const fetchEmailsListByQuery = async (
     throw new Error('Access token is missing!')
   }
 
-  const base = options.apiBaseUrl ?? 'https://gmail.googleapis.com/'
+  const base =
+    options.apiBaseUrl ?? currentGmailConfig().apiBaseUrl ?? 'https://gmail.googleapis.com/'
   const url = new URL('gmail/v1/users/me/messages', base.endsWith('/') ? base : base + '/')
   if (query) url.searchParams.set('q', query)
   const config: AxiosRequestConfig = {

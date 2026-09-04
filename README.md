@@ -127,6 +127,22 @@ const link = findElementByRegexp(email, regexp)
 ```
 # Envoy fork: emulator endpoints
 
+Existing callers can stay unchanged by configuring an isolated test worker:
+
+```ts
+const reset = configureGmail({apiBaseUrl: 'http://127.0.0.1:8026/', accessToken: 'local-test-token'});
+try {
+  // Existing getAccessToken(...) and checkInbox(...) calls use this configuration.
+} finally {
+  reset();
+}
+```
+
+This configuration is process-wide, so do not use it for concurrent consumers
+targeting different inboxes in one process. Per-call endpoint options take
+precedence. A configured test token skips OAuth; clearing the configuration
+restores normal credential validation and Google endpoint defaults.
+
 This fork retains the `@gregjlee/gmail-getter` API and Google endpoint defaults.
 For a local Gmail-compatible emulator, supply an API origin or prefix:
 

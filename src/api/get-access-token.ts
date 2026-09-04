@@ -1,4 +1,5 @@
 import axios, {AxiosRequestConfig} from 'axios'
+import {currentGmailConfig} from '../config'
 
 /**
  * Get Access token from Google API
@@ -14,6 +15,8 @@ export const getAccessToken = async (
   refreshToken: string,
   options: {tokenUrl?: string} = {}
 ): Promise<string> => {
+  const scoped = currentGmailConfig()
+  if (scoped.accessToken) return scoped.accessToken
   if (!clientId) throw new Error('Client ID is missing!')
   if (!clientSecret) throw new Error('Client Secret is missing!')
   if (!refreshToken) throw new Error('Refresh Token is missing!')
@@ -26,7 +29,7 @@ export const getAccessToken = async (
 
   const config: AxiosRequestConfig = {
     method: 'post',
-    url: options.tokenUrl ?? 'https://accounts.google.com/o/oauth2/token',
+    url: options.tokenUrl ?? scoped.tokenUrl ?? 'https://accounts.google.com/o/oauth2/token',
     timeout: 15000,
     headers: {'content-type': 'application/x-www-form-urlencoded'},
     data: params,

@@ -1,4 +1,5 @@
 import axios, {AxiosRequestConfig} from 'axios'
+import {currentGmailConfig} from '../config'
 import {Email} from './types'
 
 /**
@@ -13,7 +14,8 @@ export const fetchEmailById = async (
   token: string,
   options: {apiBaseUrl?: string} = {}
 ): Promise<Email> => {
-  const base = options.apiBaseUrl ?? 'https://gmail.googleapis.com/'
+  const base =
+    options.apiBaseUrl ?? currentGmailConfig().apiBaseUrl ?? 'https://gmail.googleapis.com/'
   const config: AxiosRequestConfig = {
     method: 'get',
     url: new URL(

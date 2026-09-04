@@ -2,6 +2,7 @@ import {createServer, Server} from 'node:http'
 import {AddressInfo} from 'node:net'
 import axios from 'axios'
 import {checkInbox, getAccessToken} from '../src'
+import * as gmail from '../src'
 
 describe('configurable emulator endpoints', () => {
   let server: Server
@@ -64,6 +65,22 @@ describe('configurable emulator endpoints', () => {
   test('refreshes a token through the configured OAuth endpoint', async () => {
     const token = await getAccessToken('client', 'secret', 'refresh', {tokenUrl: `${base}/token`})
     expect(token).toBe('local-token')
+  })
+
+  test('scopes endpoint and test token without changing existing client calls', async () => {
+    const reset = gmail.configureGmail({apiBaseUrl: `${base}/inbox/`, accessToken: 'local-token'})
+
+    try {
+      const token = await getAccessToken('', '', '')
+      expect(token).toBe('local-token')
+      expect(await checkInbox({token, query, step: 1, timeout: 200})).toMatchObject({
+        id: 'message-1',
+      })
+    } finally {
+      reset()
+    }
+
+    await expect(getAccessToken('', '', '')).rejects.toThrow('Client ID is missing')
   })
 
   test('polls missing and empty message lists until mail arrives at the configured Gmail prefix', async () => {
