@@ -4,7 +4,7 @@ import axios from 'axios'
 import {checkInbox, getAccessToken} from '../src'
 import * as gmail from '../src'
 
-describe('configurable emulator endpoints', () => {
+describe.each(['127.0.0.1', '::1'])('configurable emulator endpoints on %s', host => {
   let server: Server
   let base: string
   let searches: number
@@ -46,8 +46,13 @@ describe('configurable emulator endpoints', () => {
       } else res.writeHead(404).end('{}')
     })
 
-    await new Promise<void>(resolve => server.listen(0, '127.0.0.1', resolve))
-    base = `http://127.0.0.1:${(server.address() as AddressInfo).port}`
+    await new Promise<void>((resolve, reject) => {
+      server.once('error', reject)
+      server.listen(0, host, resolve)
+    })
+
+    const authority = host === '::1' ? '[::1]' : host
+    base = `http://${authority}:${(server.address() as AddressInfo).port}`
     // A missing endpoint override must fail locally, never contact real Google.
     const request = axios.request.bind(axios)
 
